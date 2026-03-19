@@ -2,8 +2,16 @@
   "name": "@assetflow/db",
   "version": "1.0.0",
   "private": true,
-  "type": "module",
-  "main": "./index.js",
+  "main": "./generated/client/index.js",
+  "types": "./generated/client/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./generated/client/index.d.ts",
+      "require": "./generated/client/index.js",
+      "import": "./generated/client/index.js",
+      "default": "./generated/client/index.js"
+    }
+  },
   "scripts": {
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
@@ -16,6 +24,7 @@
     "prisma": "^7.5.0"
   },
   "dependencies": {
+    "@prisma/client-runtime-utils": "^7.5.0",
     "@prisma/client": "^7.5.0"
   }
 }
