@@ -205,7 +205,7 @@ pnpm --filter @assetflow/db db:studio
 Start the API:
 
 ```bash
-PORT=3001 pnpm --filter api start:dev
+pnpm --filter api start:dev
 ```
 
 Start the web app:
@@ -220,11 +220,11 @@ Recommended local URLs:
 - API: `http://localhost:3001`
 - Health check: `http://localhost:3001/health`
 
-Important caveat:
+Port behavior:
 
 - The web app defaults to port `3000`
-- The API also defaults to port `3000` if `PORT` is not set
-- If you run both locally, set the API port explicitly
+- The API now defaults to port `3001`
+- You can still override the API port with `PORT`
 
 ## Root Scripts
 
