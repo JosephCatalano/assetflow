@@ -4,10 +4,106 @@
 // Get a free hosted Postgres database in seconds: `npx create-db`
 
 generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
+  provider = "prisma-client-js"
+  output   = "../generated/client"
 }
 
 datasource db {
   provider = "postgresql"
+}
+
+enum MembershipRole {
+  owner
+  admin
+  technician
+  viewer
+}
+
+enum AssetStatus {
+  in_stock
+  assigned
+  repair
+  retired
+  disposed
+}
+
+enum AssetCondition {
+  new
+  good
+  fair
+  poor
+}
+
+model User {
+  id                 String                   @id @default(uuid()) @db.Uuid
+  email              String                   @unique
+  name               String
+  clerkUserId        String                   @unique @map("clerk_user_id")
+  createdAt          DateTime                 @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  memberships        OrganizationMembership[] @relation("membership_user")
+  invitedMemberships OrganizationMembership[] @relation("membership_inviter")
+
+  @@map("users")
+}
+
+model Organization {
+  id          String                   @id @default(uuid()) @db.Uuid
+  name        String
+  slug        String                   @unique
+  createdAt   DateTime                 @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  memberships OrganizationMembership[]
+  assets      Asset[]
+
+  @@map("organizations")
+}
+
+model OrganizationMembership {
+  id              String         @id @default(uuid()) @db.Uuid
+  organizationId  String         @map("organization_id") @db.Uuid
+  userId          String         @map("user_id") @db.Uuid
+  role            MembershipRole
+  invitedByUserId String?        @map("invited_by_user_id") @db.Uuid
+  joinedAt        DateTime       @default(now()) @map("joined_at") @db.Timestamptz(6)
+
+  organization    Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user            User           @relation("membership_user", fields: [userId], references: [id], onDelete: Cascade)
+  invitedByUser   User?          @relation("membership_inviter", fields: [invitedByUserId], references: [id])
+
+  @@unique([organizationId, userId])
+  @@index([organizationId])
+  @@index([userId])
+  @@index([invitedByUserId])
+  @@map("organization_memberships")
+}
+
+model Asset {
+  id                 String         @id @default(uuid()) @db.Uuid
+  organizationId     String         @map("organization_id") @db.Uuid
+  assetTag           String         @map("asset_tag")
+  name               String
+  assignedUserName   String?        @map("assigned_user_name")
+  serialNumber       String?        @map("serial_number")
+  model              String?
+  manufacturer       String?
+  purchaseDate       DateTime?      @map("purchase_date") @db.Date
+  purchasePrice      Decimal?       @map("purchase_price") @db.Decimal(12, 2)
+  warrantyEndDate    DateTime?      @map("warranty_end_date") @db.Date
+  replacementDueDate DateTime?      @map("replacement_due_date") @db.Date
+  status             AssetStatus
+  condition          AssetCondition?
+  notes              String?
+  qrCodeValue        String         @map("qr_code_value")
+  archivedAt         DateTime?      @map("archived_at") @db.Timestamptz(6)
+  createdAt          DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt          DateTime       @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  organization       Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, assetTag])
+  @@index([organizationId])
+  @@index([status])
+  @@index([warrantyEndDate])
+  @@map("assets")
 }
